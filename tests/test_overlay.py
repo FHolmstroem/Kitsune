@@ -54,6 +54,10 @@ class TestOverlayWindowFlags:
         assert overlay.testAttribute(
             Qt.WidgetAttribute.WA_TransparentForMouseEvents
         )
+    
+    def test_bypass_window_manager(self, overlay):
+        flags = overlay.windowFlags()
+        assert flags & Qt.WindowType.BypassWindowManagerHint
 
 
 class TestOverlayGeometry:

@@ -65,6 +65,7 @@ class Overlay(QWidget):
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.BypassWindowManagerHint
             | Qt.WindowType.Tool  # hides from taskbar / alt-tab
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
