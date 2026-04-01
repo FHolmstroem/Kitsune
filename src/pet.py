@@ -49,43 +49,48 @@ class StateConfig:
 STATE_MACHINE: dict[PetState, StateConfig] = {
     PetState.IDLE: StateConfig(
         next_states=[
-            (PetState.WALKING_LEFT, 20), (PetState.WALKING_RIGHT, 20),
-            (PetState.WALK_UP, 15), (PetState.WALK_DOWN, 15),
-            (PetState.DIAG_UP_RIGHT, 15), (PetState.DIAG_DOWN_LEFT, 15)
+            (PetState.IDLE, 70),           # 70% chance to just stay idle again!
+            (PetState.WALKING_LEFT, 5),
+            (PetState.WALKING_RIGHT, 5),
+            (PetState.WALK_UP, 5),
+            (PetState.WALK_DOWN, 5),
+            (PetState.DIAG_UP_RIGHT, 5),
+            (PetState.DIAG_DOWN_LEFT, 5)
         ],
-        min_duration_ms=2000.0, max_duration_ms=4000.0,
+        min_duration_ms=5000.0,   # Sit still for at least 5 seconds
+        max_duration_ms=15000.0,  # Up to 15 seconds of doing nothing
     ),
     PetState.WALKING_LEFT: StateConfig(
-        next_states=[(PetState.IDLE, 50), (PetState.DIAG_DOWN_LEFT, 30), (PetState.WALK_UP, 20)],
-        min_duration_ms=3000.0, max_duration_ms=5000.0, speed_x=-60.0,
+        next_states=[(PetState.IDLE, 85), (PetState.WALK_UP, 15)], # Almost always stop walking
+        min_duration_ms=1500.0, max_duration_ms=3000.0, speed_x=-60.0, # Shorter walks
     ),
     PetState.WALKING_RIGHT: StateConfig(
-        next_states=[(PetState.IDLE, 50), (PetState.DIAG_UP_RIGHT, 30), (PetState.WALK_DOWN, 20)],
-        min_duration_ms=3000.0, max_duration_ms=5000.0, speed_x=60.0,
+        next_states=[(PetState.IDLE, 85), (PetState.WALK_DOWN, 15)],
+        min_duration_ms=1500.0, max_duration_ms=3000.0, speed_x=60.0,
     ),
     PetState.WALK_UP: StateConfig(
-        next_states=[(PetState.IDLE, 50), (PetState.WALKING_LEFT, 25), (PetState.WALKING_RIGHT, 25)],
-        min_duration_ms=2000.0, max_duration_ms=4000.0, speed_y=-50.0,
+        next_states=[(PetState.IDLE, 85), (PetState.WALKING_LEFT, 15)],
+        min_duration_ms=1500.0, max_duration_ms=3000.0, speed_y=-50.0,
     ),
     PetState.WALK_DOWN: StateConfig(
-        next_states=[(PetState.IDLE, 50), (PetState.WALKING_LEFT, 25), (PetState.WALKING_RIGHT, 25)],
-        min_duration_ms=2000.0, max_duration_ms=4000.0, speed_y=50.0,
+        next_states=[(PetState.IDLE, 85), (PetState.WALKING_RIGHT, 15)],
+        min_duration_ms=1500.0, max_duration_ms=3000.0, speed_y=50.0,
     ),
     PetState.DIAG_UP_RIGHT: StateConfig(
-        next_states=[(PetState.IDLE, 40), (PetState.WALK_UP, 30), (PetState.WALKING_RIGHT, 30)],
-        min_duration_ms=2000.0, max_duration_ms=4000.0, speed_x=60.0, speed_y=-60.0,
+        next_states=[(PetState.IDLE, 90), (PetState.WALKING_RIGHT, 10)],
+        min_duration_ms=1000.0, max_duration_ms=2500.0, speed_x=60.0, speed_y=-60.0,
     ),
     PetState.DIAG_DOWN_LEFT: StateConfig(
-        next_states=[(PetState.IDLE, 40), (PetState.WALK_DOWN, 30), (PetState.WALKING_LEFT, 30)],
-        min_duration_ms=2000.0, max_duration_ms=4000.0, speed_x=-60.0, speed_y=60.0,
+        next_states=[(PetState.IDLE, 90), (PetState.WALKING_LEFT, 10)],
+        min_duration_ms=1000.0, max_duration_ms=2500.0, speed_x=-60.0, speed_y=60.0,
     ),
     PetState.FLEEING_LEFT: StateConfig(
-        next_states=[(PetState.WALKING_LEFT, 100)],
-        min_duration_ms=1500.0, max_duration_ms=2500.0, speed_x=-180.0, speed_y=-100.0,
+        next_states=[(PetState.IDLE, 100)], # Stop and catch its breath after running
+        min_duration_ms=1500.0, max_duration_ms=2000.0, speed_x=-180.0, speed_y=-100.0,
     ),
     PetState.FLEEING_RIGHT: StateConfig(
-        next_states=[(PetState.WALKING_RIGHT, 100)],
-        min_duration_ms=1500.0, max_duration_ms=2500.0, speed_x=180.0, speed_y=-100.0,
+        next_states=[(PetState.IDLE, 100)], # Stop and catch its breath after running
+        min_duration_ms=1500.0, max_duration_ms=2000.0, speed_x=180.0, speed_y=-100.0,
     ),
 }
 
