@@ -118,32 +118,7 @@ class TestOverlayRaiseTimer:
         assert overlay._raise_timer.interval() == 500
 
 
-# ---- Placeholder sprite tests --------------------------------------------
 
-class TestPlaceholderSprite:
-    """The placeholder created in main.py should be a valid pixmap."""
-
-    def test_returns_pixmap(self, qapp):
-        from main import _make_placeholder_sprite
-        px = _make_placeholder_sprite()
-        assert isinstance(px, QPixmap)
-        assert not px.isNull()
-
-    def test_default_size(self, qapp):
-        from main import _make_placeholder_sprite
-        px = _make_placeholder_sprite()
-        assert px.width() == 48 and px.height() == 48
-
-    def test_custom_size(self, qapp):
-        from main import _make_placeholder_sprite
-        px = _make_placeholder_sprite(size=64)
-        assert px.width() == 64 and px.height() == 64
-
-    def test_has_transparency(self, qapp):
-        """The pixmap should have an alpha channel (transparent bg)."""
-        from main import _make_placeholder_sprite
-        px = _make_placeholder_sprite()
-        assert px.hasAlphaChannel()
 
 
 # ---- Tray icon tests ------------------------------------------------------

@@ -13,23 +13,8 @@ from PyQt6.QtGui import QPixmap, QColor, QPainter, QIcon, QAction, QShortcut, QK
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 
 from overlay import Overlay
-
 from animation import AnimationController, create_placeholder_animations
-
-
-def _make_placeholder_sprite(size: int = 48) -> QPixmap:
-    """Create a simple colored square so we have *something* visible.
-
-    This gets replaced once animation.py loads real sprite sheets.
-    """
-    pixmap = QPixmap(size, size)
-    pixmap.fill(QColor(0, 0, 0, 0))  # transparent background
-    painter = QPainter(pixmap)
-    painter.setBrush(QColor(255, 255, 255))       # white fill (the fox!)
-    painter.setPen(QColor(60, 60, 60))             # dark outline
-    painter.drawEllipse(4, 4, size - 8, size - 8)  # simple circle
-    painter.end()
-    return pixmap
+from pet import Pet
 
 
 def _make_tray_icon() -> QIcon:
@@ -45,80 +30,98 @@ def _make_tray_icon() -> QIcon:
 
 
 def _setup_signal_handling(app: QApplication) -> None:
-    """Let Ctrl+C in the terminal kill the app.
-
-    PyQt installs its own signal handler that swallows SIGINT.
-    The fix: restore Python's default handler, and use a short
-    QTimer to give Python a chance to process it between Qt events.
-    """
+    """Let Ctrl+C in the terminal kill the app."""
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-    # Python signal handlers only run between bytecode instructions.
-    # Qt's event loop blocks in C, so Python never gets control.
-    # This dummy timer wakes Python up every 200 ms so it can
-    # notice the signal and exit.
     timer = QTimer(app)
     timer.timeout.connect(lambda: None)
     timer.start(200)
 
 
 def _setup_tray(app: QApplication) -> QSystemTrayIcon:
-    """Create a system tray icon with a Quit option.
-
-    This is the main way to close the app since the overlay
-    has no title bar and hides from the taskbar.
-    """
+    """Create a system tray icon with a Quit option."""
     tray = QSystemTrayIcon(_make_tray_icon(), app)
-
     menu = QMenu()
     quit_action = QAction("Quit Kitsune", menu)
     quit_action.triggered.connect(app.quit)
     menu.addAction(quit_action)
-
     tray.setContextMenu(menu)
     tray.setToolTip("Kitsune 🦊")
     tray.show()
     return tray
 
 
-def main() -> None:
-    """Launch Kitsune."""
-    app = QApplication(sys.argv)
-
-    _setup_signal_handling(app)
-    tray = _setup_tray(app)  # noqa: F841 — prevent garbage collection
-
-    overlay = Overlay()
-    
-    # 1. Setup the animation controller
+def _setup_animations() -> AnimationController:
+    """Initialize the animation state machine with sprites."""
     anim_controller = AnimationController()
     placeholders = create_placeholder_animations()
     anim_controller.add_animation("idle", placeholders["idle"])
     anim_controller.add_animation("walk_left", placeholders["walk_left"])
     anim_controller.add_animation("walk_right", placeholders["walk_right"])
+    return anim_controller
+
+
+def _setup_pet(app: QApplication) -> Pet:
+    """Create the logic brain and set its screen boundaries."""
+    screen = app.primaryScreen()
+    screen_rect = screen.geometry()
+
+    sprite_size = 48
+    max_x = float(screen_rect.width() - sprite_size)
     
-    anim_controller.play("walk_right") # Start with a walking animation
+    # 🐛 DEBUG FIX: Force the Y coordinate to the exact middle of the screen
+    # so we know for a fact it isn't hiding behind the taskbar.
+    ground_y = float(screen_rect.height() / 2.0) 
+
+    # Start the fox in the middle of the screen
+    fox_logic = Pet(start_x=max_x / 2.0, start_y=ground_y)
+    fox_logic.set_boundaries(min_x=0.0, max_x=max_x)
+    return fox_logic
+
+
+def _setup_game_loop(overlay: Overlay, fox_logic: Pet, anim_controller: AnimationController) -> None:
+    """Wire the logic, animations, and Qt update loop together."""
     
-    # 2. Wire the controller to the overlay's tick timer
-    # Overwrite the overlay's update to also tick the animation
-    original_update = overlay.update
-    def custom_update():
-        # Pass the same TICK_MS that overlay uses
-        frame = anim_controller.tick(overlay.TICK_MS)
+    def game_loop_tick():
+        delta = overlay.TICK_MS
+
+        fox_logic.tick(delta)
+        anim_controller.play(str(fox_logic.state.value))
+
+        frame = anim_controller.tick(delta)
         if frame:
             overlay.set_sprite(frame)
-        original_update()
-        
-    # Hook it up
-    overlay._tick_timer.timeout.disconnect(overlay.update)
-    overlay._tick_timer.timeout.connect(custom_update)
 
-    overlay.set_position(400, 300)
+        overlay.set_position(int(fox_logic.x), int(fox_logic.y))
+
+        # Safer way to force the Qt repaint
+        overlay.update()
+        
+        print(f"State: {fox_logic.state.value:10} | Pos: ({int(fox_logic.x):4}, {int(fox_logic.y):4})", end="\r")
+
+    overlay._tick_timer.timeout.disconnect()
+    overlay._tick_timer.timeout.connect(game_loop_tick)
+
+
+def main() -> None:
+    """Launch Kitsune."""
+    app = QApplication(sys.argv)
+
+    # Setup core application systems
+    _setup_signal_handling(app)
+    tray = _setup_tray(app)  # noqa: F841
+
+    # Create the components
+    overlay = Overlay()
+    anim_controller = _setup_animations()
+    fox_logic = _setup_pet(app)
+
+    # Bind them together
+    _setup_game_loop(overlay, fox_logic, anim_controller)
+
+    # Display the app
     overlay.show()
 
-    # Ctrl+Q to quit — works even when tray icon fails (e.g. KDE).
-    # ApplicationShortcut context means it fires regardless of which
-    # widget has focus.
+    # Keyboard shortcuts
     shortcut = QShortcut(QKeySequence("Ctrl+Q"), overlay)
     shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
     shortcut.activated.connect(app.quit)
