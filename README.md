@@ -27,6 +27,10 @@ pip install -r requirements.txt
 
 ```bash
 python -m src.main
+
+.\venv\Scripts\Activate.ps1
+$env:QT_QPA_PLATFORM="offscreen"; $env:PYTHONPATH="src"; pytest tests/ -v; Remove-Item env:QT_QPA_PLATFORM
+
 ```
 
 ## Project Structure

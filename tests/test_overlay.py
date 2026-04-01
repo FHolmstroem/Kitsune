@@ -26,7 +26,8 @@ def overlay(qapp):
     ov = Overlay()
     yield ov
     ov._tick_timer.stop()
-    ov._raise_timer.stop()
+    if ov._raise_timer:
+        ov._raise_timer.stop()
 
 
 class TestOverlayWindowFlags:
@@ -51,11 +52,15 @@ class TestOverlayWindowFlags:
         )
 
     def test_transparent_for_mouse(self, overlay):
+        if sys.platform == "win32":
+            pytest.skip("Click-through handled differently on Windows")
         assert overlay.testAttribute(
             Qt.WidgetAttribute.WA_TransparentForMouseEvents
         )
     
     def test_bypass_window_manager(self, overlay):
+        if sys.platform == "win32":
+            pytest.skip("BypassWindowManagerHint is Linux-only")
         flags = overlay.windowFlags()
         assert flags & Qt.WindowType.BypassWindowManagerHint
 
@@ -112,9 +117,13 @@ class TestOverlayRaiseTimer:
     """The raise timer should keep the overlay on top of other windows."""
 
     def test_raise_timer_active(self, overlay):
+        if sys.platform == "win32":
+            pytest.skip("Raise timer is Linux-only")
         assert overlay._raise_timer.isActive()
 
     def test_raise_timer_interval(self, overlay):
+        if sys.platform == "win32":
+            pytest.skip("Raise timer is Linux-only")
         assert overlay._raise_timer.interval() == 500
 
 

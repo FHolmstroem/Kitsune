@@ -87,6 +87,7 @@ tests/
 - [x] animation.py implemented (with temporary blob generator)
 - [x] pet.py implemented — pure logic state machine with boundary collision
 - [x] Fox walks across screen (bounces off monitor edges)
+- [x] Moved from Wsl -d Debian to Windows powershell, git and script everything working.
 - [ ] interactions.py implemented
 - [ ] Real sprites created
 - [ ] Fox walks across screen

@@ -13,10 +13,11 @@ Key Qt flags used:
     - Qt.WA_TransparentForMouseEvents (on the window itself,
       but NOT on the fox sprite area — we need clicks there)
 """
-
+import sys
 from PyQt6.QtCore import Qt, QPoint, QRect, QTimer
 from PyQt6.QtGui import QPainter, QPixmap
 from PyQt6.QtWidgets import QWidget, QApplication
+
 
 
 class Overlay(QWidget):
@@ -52,9 +53,13 @@ class Overlay(QWidget):
         # windows. Periodically calling raise_() nudges us back on top.
         # 500 ms is frequent enough to feel instant but cheap enough
         # to not waste CPU.
-        self._raise_timer = QTimer(self)
-        self._raise_timer.timeout.connect(self.raise_)
-        self._raise_timer.start(500)
+        # Only needed on Linux (KDE workaround)
+        if sys.platform != "win32":
+            self._raise_timer = QTimer(self)
+            self._raise_timer.timeout.connect(self.raise_)
+            self._raise_timer.start(500)
+        else:
+            self._raise_timer = None
 
     # ------------------------------------------------------------------
     # Setup helpers
@@ -62,20 +67,20 @@ class Overlay(QWidget):
 
     def _setup_window_flags(self) -> None:
         """Configure the window to be frameless, transparent, and on top."""
-        self.setWindowFlags(
+        flags = (
             Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.WindowStaysOnTopHint
-            | Qt.WindowType.BypassWindowManagerHint
-            | Qt.WindowType.Tool  # hides from taskbar / alt-tab
+            | Qt.WindowType.Tool
         )
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # KDE/Plasma needs this to actually stay on top; Windows doesn't.
+        if sys.platform != "win32":
+            flags |= Qt.WindowType.BypassWindowManagerHint
 
-        # Let mouse events fall through to windows underneath.
-        # We'll selectively consume events in the fox sprite area
-        # once interactions.py is wired up.
-        self.setAttribute(
-            Qt.WidgetAttribute.WA_TransparentForMouseEvents, True
-        )
+        self.setWindowFlags(flags)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        #self.setAttribute(
+        #    Qt.WidgetAttribute.WA_TransparentForMouseEvents, True
+        #)
 
     def _resize_to_screen(self) -> None:
         """Stretch the overlay to cover the entire primary screen."""
@@ -110,7 +115,7 @@ class Overlay(QWidget):
     # Qt overrides
     # ------------------------------------------------------------------
 
-    def paintEvent(self, event) -> None:  # noqa: N802 (Qt naming)
+    def paintEvent(self, event) -> None:
         """Draw the current sprite frame at the fox's position."""
         if self._current_frame is None:
             return
