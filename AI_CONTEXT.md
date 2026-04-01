@@ -62,7 +62,9 @@ src/
 
 tests/
 ├── test_overlay.py   22 tests covering: window flags, geometry, sprite positioning,
-│                     tick timer, raise timer, placeholder sprite, tray icon, signal handling.
+│                     tick timer, raise timer, tray icon, signal handling.
+├── test_animation.py Tests for FPS math, AnimationController state machine, and sprite slicing.
+├── test_pet.py       Tests for logic state machine, timers, and screen boundary collisions.
 ```
 
 ## Implementation order
@@ -83,8 +85,8 @@ tests/
 - [x] Overlay stays on top — BypassWindowManagerHint + periodic raise_() for KDE
 - [x] Test suite — passing tests for overlay.py and animation.py
 - [x] animation.py implemented (with temporary blob generator)
-- [ ] pet.py implemented
-- [ ] window_manager.py implemented
+- [x] pet.py implemented — pure logic state machine with boundary collision
+- [x] Fox walks across screen (bounces off monitor edges)
 - [ ] interactions.py implemented
 - [ ] Real sprites created
 - [ ] Fox walks across screen
