@@ -14,6 +14,8 @@ from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 
 from overlay import Overlay
 
+from animation import AnimationController, create_placeholder_animations
+
 
 def _make_placeholder_sprite(size: int = 48) -> QPixmap:
     """Create a simple colored square so we have *something* visible.
@@ -87,7 +89,30 @@ def main() -> None:
     tray = _setup_tray(app)  # noqa: F841 — prevent garbage collection
 
     overlay = Overlay()
-    overlay.set_sprite(_make_placeholder_sprite())
+    
+    # 1. Setup the animation controller
+    anim_controller = AnimationController()
+    placeholders = create_placeholder_animations()
+    anim_controller.add_animation("idle", placeholders["idle"])
+    anim_controller.add_animation("walk_left", placeholders["walk_left"])
+    anim_controller.add_animation("walk_right", placeholders["walk_right"])
+    
+    anim_controller.play("walk_right") # Start with a walking animation
+    
+    # 2. Wire the controller to the overlay's tick timer
+    # Overwrite the overlay's update to also tick the animation
+    original_update = overlay.update
+    def custom_update():
+        # Pass the same TICK_MS that overlay uses
+        frame = anim_controller.tick(overlay.TICK_MS)
+        if frame:
+            overlay.set_sprite(frame)
+        original_update()
+        
+    # Hook it up
+    overlay._tick_timer.timeout.disconnect(overlay.update)
+    overlay._tick_timer.timeout.connect(custom_update)
+
     overlay.set_position(400, 300)
     overlay.show()
 

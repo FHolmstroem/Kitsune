@@ -81,8 +81,8 @@ tests/
 - [x] main.py wired up — launches overlay with placeholder sprite (white circle)
 - [x] Shutdown works — Ctrl+Q shortcut, Ctrl+C in terminal, tray icon quit menu
 - [x] Overlay stays on top — BypassWindowManagerHint + periodic raise_() for KDE
-- [x] Test suite — 22 tests passing (flags, geometry, sprites, timers, tray, signals)
-- [ ] animation.py implemented
+- [x] Test suite — passing tests for overlay.py and animation.py
+- [x] animation.py implemented (with temporary blob generator)
 - [ ] pet.py implemented
 - [ ] window_manager.py implemented
 - [ ] interactions.py implemented
