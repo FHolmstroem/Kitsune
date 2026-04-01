@@ -32,6 +32,7 @@ class PetState(str, Enum):
     IDLE = "idle"
     WALKING_LEFT = "walk_left"
     WALKING_RIGHT = "walk_right"
+    FLEEING = "fleeing"
     # SLEEPING = "sleep"  # We'll add this later!
 
 
@@ -66,6 +67,12 @@ STATE_MACHINE: dict[PetState, StateConfig] = {
         min_duration_ms=3000.0,
         max_duration_ms=5000.0,
         speed_x=60.0,
+    ),
+    PetState.FLEEING: StateConfig(
+        next_states=[(PetState.WALKING_LEFT, 50), (PetState.WALKING_RIGHT, 50)],
+        min_duration_ms=1500.0,
+        max_duration_ms=2500.0,
+        speed_x=120.0,  # Double speed!
     ),
 }
 

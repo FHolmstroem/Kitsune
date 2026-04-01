@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from overlay import Overlay
 from animation import AnimationController, create_placeholder_animations
 from pet import Pet
+from interactions import InteractionHandler
 
 
 def _make_tray_icon() -> QIcon:
@@ -114,6 +115,11 @@ def main() -> None:
     overlay = Overlay()
     anim_controller = _setup_animations()
     fox_logic = _setup_pet(app)
+
+    # Wire up the mouse events
+    interaction_handler = InteractionHandler(overlay, fox_logic)
+
+    _setup_game_loop(overlay, fox_logic, anim_controller)
 
     # Bind them together
     _setup_game_loop(overlay, fox_logic, anim_controller)

@@ -88,7 +88,7 @@ tests/
 - [x] pet.py implemented — pure logic state machine with boundary collision
 - [x] Fox walks across screen (bounces off monitor edges)
 - [x] Moved from Wsl -d Debian to Windows powershell, git and script everything working.
-- [ ] interactions.py implemented
+- [x] interactions.py implemented
 - [ ] Real sprites created
 - [ ] Fox walks across screen
 - [ ] Fox hides behind windows
@@ -132,7 +132,7 @@ From the project root, run:
 { echo "=== AI_CONTEXT.md ==="; cat AI_CONTEXT.md; for f in src/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; for f in tests/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; } | clip.exe
 
 # Windows (PowerShell)
-(Get-Content AI_CONTEXT.md; Get-ChildItem src/*.py | ForEach-Object { "`n=== $($_.Name) ==="; Get-Content $_ }; Get-ChildItem tests/*.py | ForEach-Object { "`n=== $($_.Name) ==="; Get-Content $_ }) | Set-Clipboard
+$(Get-Content AI_CONTEXT.md; Get-ChildItem src/*.py | ForEach-Object { "`n=== $($_.Name) ==="; Get-Content $_ }; Get-ChildItem tests/*.py | ForEach-Object { "`n=== $($_.Name) ==="; Get-Content $_ }) | Set-Clipboard
 ```
 
 Then just paste into a new chat. The AI will have full context immediately.
