@@ -26,14 +26,18 @@ import random
 from dataclasses import dataclass
 from enum import Enum
 
-
 class PetState(str, Enum):
     """String enum mapping directly to animation names."""
     IDLE = "idle"
     WALKING_LEFT = "walk_left"
     WALKING_RIGHT = "walk_right"
     FLEEING = "fleeing"
-    # SLEEPING = "sleep"  # We'll add this later!
+    
+    # --- New Fun States ---
+    WALK_UP = "walk_up"
+    WALK_DOWN = "walk_down"
+    DIAG_UP_RIGHT = "diag_up_right"
+    DIAG_DOWN_LEFT = "diag_down_left"
 
 
 @dataclass
@@ -43,36 +47,50 @@ class StateConfig:
     min_duration_ms: float
     max_duration_ms: float
     speed_x: float = 0.0  # Pixels per second
+    speed_y: float = 0.0  # <-- NEW: Y-axis speed
 
 
 # The Fox's Brain: Defines how states flow into each other
 STATE_MACHINE: dict[PetState, StateConfig] = {
     PetState.IDLE: StateConfig(
         next_states=[
-            (PetState.WALKING_LEFT, 40),
-            (PetState.WALKING_RIGHT, 40),
-            (PetState.IDLE, 20)
+            (PetState.WALKING_LEFT, 20),
+            (PetState.WALKING_RIGHT, 20),
+            (PetState.WALK_UP, 15),
+            (PetState.WALK_DOWN, 15),
+            (PetState.DIAG_UP_RIGHT, 15),
+            (PetState.DIAG_DOWN_LEFT, 15)
         ],
         min_duration_ms=2000.0,
         max_duration_ms=4000.0,
     ),
     PetState.WALKING_LEFT: StateConfig(
-        next_states=[(PetState.IDLE, 80), (PetState.WALKING_RIGHT, 20)],
-        min_duration_ms=3000.0,
-        max_duration_ms=5000.0,
-        speed_x=-60.0,
+        next_states=[(PetState.IDLE, 50), (PetState.DIAG_DOWN_LEFT, 30), (PetState.WALK_UP, 20)],
+        min_duration_ms=3000.0, max_duration_ms=5000.0, speed_x=-60.0,
     ),
     PetState.WALKING_RIGHT: StateConfig(
-        next_states=[(PetState.IDLE, 80), (PetState.WALKING_LEFT, 20)],
-        min_duration_ms=3000.0,
-        max_duration_ms=5000.0,
-        speed_x=60.0,
+        next_states=[(PetState.IDLE, 50), (PetState.DIAG_UP_RIGHT, 30), (PetState.WALK_DOWN, 20)],
+        min_duration_ms=3000.0, max_duration_ms=5000.0, speed_x=60.0,
+    ),
+    PetState.WALK_UP: StateConfig(
+        next_states=[(PetState.IDLE, 50), (PetState.WALKING_LEFT, 25), (PetState.WALKING_RIGHT, 25)],
+        min_duration_ms=2000.0, max_duration_ms=4000.0, speed_y=-50.0,
+    ),
+    PetState.WALK_DOWN: StateConfig(
+        next_states=[(PetState.IDLE, 50), (PetState.WALKING_LEFT, 25), (PetState.WALKING_RIGHT, 25)],
+        min_duration_ms=2000.0, max_duration_ms=4000.0, speed_y=50.0,
+    ),
+    PetState.DIAG_UP_RIGHT: StateConfig(
+        next_states=[(PetState.IDLE, 40), (PetState.WALK_UP, 30), (PetState.WALKING_RIGHT, 30)],
+        min_duration_ms=2000.0, max_duration_ms=4000.0, speed_x=60.0, speed_y=-60.0,
+    ),
+    PetState.DIAG_DOWN_LEFT: StateConfig(
+        next_states=[(PetState.IDLE, 40), (PetState.WALK_DOWN, 30), (PetState.WALKING_LEFT, 30)],
+        min_duration_ms=2000.0, max_duration_ms=4000.0, speed_x=-60.0, speed_y=60.0,
     ),
     PetState.FLEEING: StateConfig(
-        next_states=[(PetState.WALKING_LEFT, 50), (PetState.WALKING_RIGHT, 50)],
-        min_duration_ms=1500.0,
-        max_duration_ms=2500.0,
-        speed_x=120.0,  # Double speed!
+        next_states=[(PetState.DIAG_UP_RIGHT, 50), (PetState.DIAG_DOWN_LEFT, 50)],
+        min_duration_ms=1500.0, max_duration_ms=2500.0, speed_x=120.0, speed_y=-120.0,
     ),
 }
 
@@ -84,51 +102,69 @@ class Pet:
         self.x = start_x
         self.y = start_y
         
-        # Safe defaults, will be updated by main.py based on screen size
         self.min_x = 0.0
         self.max_x = 1920.0
+        self.min_y = 0.0    
+        self.max_y = 1080.0 
+        
+        # Track current active speeds
+        self.speed_x = 0.0
+        self.speed_y = 0.0
         
         self.state = PetState.IDLE
         self._state_timer_ms = 0.0
-        
         self.enter_state(PetState.IDLE)
 
-    def set_boundaries(self, min_x: float, max_x: float) -> None:
-        """Define the walkable area so the fox doesn't leave the screen."""
+    def set_boundaries(self, min_x: float, max_x: float, min_y: float, max_y: float) -> None:
         self.min_x = min_x
         self.max_x = max_x
+        self.min_y = min_y
+        self.max_y = max_y
 
     def enter_state(self, new_state: PetState) -> None:
-        """Transition into a new state and roll for its duration."""
         self.state = new_state
         config = STATE_MACHINE[self.state]
         self._state_timer_ms = random.uniform(config.min_duration_ms, config.max_duration_ms)
 
+        # --- The Panic Randomizer ---
+        if self.state == PetState.FLEEING:
+            # Pick a random fast diagonal direction every time it gets shooed
+            self.speed_x = random.choice([-150.0, 150.0])
+            self.speed_y = random.choice([-150.0, 150.0])
+        else:
+            # Use normal configured speeds
+            self.speed_x = config.speed_x
+            self.speed_y = getattr(config, 'speed_y', 0.0)
+
     def _pick_next_state(self) -> None:
-        """Weighted random selection of the next state."""
         config = STATE_MACHINE[self.state]
         states, weights = zip(*config.next_states)
         next_state = random.choices(states, weights=weights, k=1)[0]
         self.enter_state(next_state)
 
     def tick(self, delta_ms: float) -> None:
-        """Update the logic. Called by the main loop every frame."""
         self._state_timer_ms -= delta_ms
 
-        # 1. Change mind if timer runs out
         if self._state_timer_ms <= 0:
             self._pick_next_state()
 
-        # 2. Move based on current state's speed
-        config = STATE_MACHINE[self.state]
-        if config.speed_x != 0:
-            movement = config.speed_x * (delta_ms / 1000.0)
-            self.x += movement
+        # Move using our active speeds instead of the static config
+        if self.speed_x != 0:
+            self.x += self.speed_x * (delta_ms / 1000.0)
+        if self.speed_y != 0:
+            self.y += self.speed_y * (delta_ms / 1000.0)
 
-            # 3. Boundary checks (Bonk! Turn around)
-            if self.x <= self.min_x:
-                self.x = self.min_x
-                self.enter_state(PetState.WALKING_RIGHT)
-            elif self.x >= self.max_x:
-                self.x = self.max_x
-                self.enter_state(PetState.WALKING_LEFT)
+        # Boundary checks: Bonk and turn around!
+        if self.x <= self.min_x:
+            self.x = self.min_x
+            self.enter_state(PetState.WALKING_RIGHT)
+        elif self.x >= self.max_x:
+            self.x = self.max_x
+            self.enter_state(PetState.WALKING_LEFT)
+
+        if self.y <= self.min_y:
+            self.y = self.min_y
+            self.enter_state(PetState.WALK_DOWN)
+        elif self.y >= self.max_y:
+            self.y = self.max_y
+            self.enter_state(PetState.WALK_UP)

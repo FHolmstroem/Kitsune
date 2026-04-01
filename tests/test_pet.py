@@ -39,7 +39,7 @@ def test_state_transition_on_timer():
 def test_boundary_collision_left():
     """Hitting the left boundary should force the pet to walk right."""
     pet = Pet(start_x=10.0, start_y=500.0)
-    pet.set_boundaries(min_x=0.0, max_x=1000.0)
+    pet.set_boundaries(min_x=0.0, max_x=1000.0, min_y=0.0, max_y=1000.0)
     
     pet.enter_state(PetState.WALKING_LEFT)
     
@@ -53,7 +53,7 @@ def test_boundary_collision_left():
 def test_boundary_collision_right():
     """Hitting the right boundary should force the pet to walk left."""
     pet = Pet(start_x=990.0, start_y=500.0)
-    pet.set_boundaries(min_x=0.0, max_x=1000.0)
+    pet.set_boundaries(min_x=0.0, max_x=1000.0, min_y=0.0, max_y=1000.0)
     
     pet.enter_state(PetState.WALKING_RIGHT)
     

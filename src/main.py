@@ -14,8 +14,9 @@ from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 
 from overlay import Overlay
 from animation import AnimationController, create_placeholder_animations
-from pet import Pet
+from pet import Pet, PetState
 from interactions import InteractionHandler
+
 
 
 def _make_tray_icon() -> QIcon:
@@ -55,9 +56,19 @@ def _setup_animations() -> AnimationController:
     """Initialize the animation state machine with sprites."""
     anim_controller = AnimationController()
     placeholders = create_placeholder_animations()
-    anim_controller.add_animation("idle", placeholders["idle"])
-    anim_controller.add_animation("walk_left", placeholders["walk_left"])
-    anim_controller.add_animation("walk_right", placeholders["walk_right"])
+    
+    # Base states
+    anim_controller.add_animation(PetState.IDLE, placeholders["idle"])
+    anim_controller.add_animation(PetState.WALKING_LEFT, placeholders["walk_left"])
+    anim_controller.add_animation(PetState.WALKING_RIGHT, placeholders["walk_right"])
+    anim_controller.add_animation(PetState.FLEEING, placeholders["walk_right"])
+    
+    # New states mapped to existing placeholders so the app doesn't crash
+    anim_controller.add_animation(PetState.WALK_UP, placeholders["idle"])
+    anim_controller.add_animation(PetState.WALK_DOWN, placeholders["idle"])
+    anim_controller.add_animation(PetState.DIAG_UP_RIGHT, placeholders["walk_right"])
+    anim_controller.add_animation(PetState.DIAG_DOWN_LEFT, placeholders["walk_left"])
+    
     return anim_controller
 
 
@@ -68,14 +79,12 @@ def _setup_pet(app: QApplication) -> Pet:
 
     sprite_size = 48
     max_x = float(screen_rect.width() - sprite_size)
-    
-    # 🐛 DEBUG FIX: Force the Y coordinate to the exact middle of the screen
-    # so we know for a fact it isn't hiding behind the taskbar.
-    ground_y = float(screen_rect.height() / 2.0) 
+    max_y = float(screen_rect.height() - sprite_size)  # Calculate Y bounds
 
     # Start the fox in the middle of the screen
-    fox_logic = Pet(start_x=max_x / 2.0, start_y=ground_y)
-    fox_logic.set_boundaries(min_x=0.0, max_x=max_x)
+    fox_logic = Pet(start_x=max_x / 2.0, start_y=max_y / 2.0)
+    # Pass all 4 boundaries
+    fox_logic.set_boundaries(min_x=0.0, max_x=max_x, min_y=0.0, max_y=max_y)
     return fox_logic
 
 
