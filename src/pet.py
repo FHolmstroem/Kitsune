@@ -27,13 +27,11 @@ from dataclasses import dataclass
 from enum import Enum
 
 class PetState(str, Enum):
-    """String enum mapping directly to animation names."""
     IDLE = "idle"
     WALKING_LEFT = "walk_left"
     WALKING_RIGHT = "walk_right"
-    FLEEING = "fleeing"
-    
-    # --- New Fun States ---
+    FLEEING_LEFT = "fleeing_left"    # Updated!
+    FLEEING_RIGHT = "fleeing_right"  # Updated!
     WALK_UP = "walk_up"
     WALK_DOWN = "walk_down"
     DIAG_UP_RIGHT = "diag_up_right"
@@ -42,27 +40,20 @@ class PetState(str, Enum):
 
 @dataclass
 class StateConfig:
-    """Configuration for a specific behavior state."""
-    next_states: list[tuple[PetState, int]]  # List of (NextState, Weight)
+    next_states: list[tuple[PetState, int]]
     min_duration_ms: float
     max_duration_ms: float
-    speed_x: float = 0.0  # Pixels per second
-    speed_y: float = 0.0  # <-- NEW: Y-axis speed
+    speed_x: float = 0.0
+    speed_y: float = 0.0
 
-
-# The Fox's Brain: Defines how states flow into each other
 STATE_MACHINE: dict[PetState, StateConfig] = {
     PetState.IDLE: StateConfig(
         next_states=[
-            (PetState.WALKING_LEFT, 20),
-            (PetState.WALKING_RIGHT, 20),
-            (PetState.WALK_UP, 15),
-            (PetState.WALK_DOWN, 15),
-            (PetState.DIAG_UP_RIGHT, 15),
-            (PetState.DIAG_DOWN_LEFT, 15)
+            (PetState.WALKING_LEFT, 20), (PetState.WALKING_RIGHT, 20),
+            (PetState.WALK_UP, 15), (PetState.WALK_DOWN, 15),
+            (PetState.DIAG_UP_RIGHT, 15), (PetState.DIAG_DOWN_LEFT, 15)
         ],
-        min_duration_ms=2000.0,
-        max_duration_ms=4000.0,
+        min_duration_ms=2000.0, max_duration_ms=4000.0,
     ),
     PetState.WALKING_LEFT: StateConfig(
         next_states=[(PetState.IDLE, 50), (PetState.DIAG_DOWN_LEFT, 30), (PetState.WALK_UP, 20)],
@@ -88,29 +79,26 @@ STATE_MACHINE: dict[PetState, StateConfig] = {
         next_states=[(PetState.IDLE, 40), (PetState.WALK_DOWN, 30), (PetState.WALKING_LEFT, 30)],
         min_duration_ms=2000.0, max_duration_ms=4000.0, speed_x=-60.0, speed_y=60.0,
     ),
-    PetState.FLEEING: StateConfig(
-        next_states=[(PetState.DIAG_UP_RIGHT, 50), (PetState.DIAG_DOWN_LEFT, 50)],
-        min_duration_ms=1500.0, max_duration_ms=2500.0, speed_x=120.0, speed_y=-120.0,
+    PetState.FLEEING_LEFT: StateConfig(
+        next_states=[(PetState.WALKING_LEFT, 100)],
+        min_duration_ms=1500.0, max_duration_ms=2500.0, speed_x=-180.0, speed_y=-100.0,
+    ),
+    PetState.FLEEING_RIGHT: StateConfig(
+        next_states=[(PetState.WALKING_RIGHT, 100)],
+        min_duration_ms=1500.0, max_duration_ms=2500.0, speed_x=180.0, speed_y=-100.0,
     ),
 }
 
-
 class Pet:
-    """Pure logic representation of the fox."""
-
     def __init__(self, start_x: float, start_y: float) -> None:
         self.x = start_x
         self.y = start_y
-        
         self.min_x = 0.0
         self.max_x = 1920.0
         self.min_y = 0.0    
         self.max_y = 1080.0 
-        
-        # Track current active speeds
         self.speed_x = 0.0
         self.speed_y = 0.0
-        
         self.state = PetState.IDLE
         self._state_timer_ms = 0.0
         self.enter_state(PetState.IDLE)
@@ -126,13 +114,14 @@ class Pet:
         config = STATE_MACHINE[self.state]
         self._state_timer_ms = random.uniform(config.min_duration_ms, config.max_duration_ms)
 
-        # --- The Panic Randomizer ---
-        if self.state == PetState.FLEEING:
-            # Pick a random fast diagonal direction every time it gets shooed
-            self.speed_x = random.choice([-150.0, 150.0])
+        # Apply chaotic fleeing speeds based on direction
+        if self.state == PetState.FLEEING_LEFT:
+            self.speed_x = config.speed_x
+            self.speed_y = random.choice([-150.0, 150.0])
+        elif self.state == PetState.FLEEING_RIGHT:
+            self.speed_x = config.speed_x
             self.speed_y = random.choice([-150.0, 150.0])
         else:
-            # Use normal configured speeds
             self.speed_x = config.speed_x
             self.speed_y = getattr(config, 'speed_y', 0.0)
 
@@ -148,13 +137,11 @@ class Pet:
         if self._state_timer_ms <= 0:
             self._pick_next_state()
 
-        # Move using our active speeds instead of the static config
         if self.speed_x != 0:
             self.x += self.speed_x * (delta_ms / 1000.0)
         if self.speed_y != 0:
             self.y += self.speed_y * (delta_ms / 1000.0)
 
-        # Boundary checks: Bonk and turn around!
         if self.x <= self.min_x:
             self.x = self.min_x
             self.enter_state(PetState.WALKING_RIGHT)

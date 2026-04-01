@@ -89,11 +89,11 @@ tests/
 - [x] Fox walks across screen (bounces off monitor edges)
 - [x] Moved from Wsl -d Debian to Windows powershell, git and script everything working.
 - [x] interactions.py implemented
-- [ ] Real sprites created
-- [ ] Fox walks across screen
+- [x] Real sprites created
+- [x] Fox walks across screen
 - [ ] Fox hides behind windows
-- [ ] Click to shoo works
-- [ ] Drag to move works
+- [x] Click to shoo works
+- [x] Drag to move works
 
 ## Known quirks
 

@@ -16,7 +16,10 @@ from overlay import Overlay
 from animation import AnimationController, create_placeholder_animations
 from pet import Pet, PetState
 from interactions import InteractionHandler
-
+from animation import AnimationController, Animation, load_sprite_sheet
+from PyQt6.QtCore import QSize
+from PyQt6.QtGui import QTransform
+from pet import Pet, PetState
 
 
 def _make_tray_icon() -> QIcon:
@@ -53,21 +56,61 @@ def _setup_tray(app: QApplication) -> QSystemTrayIcon:
 
 
 def _setup_animations() -> AnimationController:
-    """Initialize the animation state machine with sprites."""
+    """Initialize the animation state machine with real cat sprites."""
     anim_controller = AnimationController()
-    placeholders = create_placeholder_animations()
     
-    # Base states
-    anim_controller.add_animation(PetState.IDLE, placeholders["idle"])
-    anim_controller.add_animation(PetState.WALKING_LEFT, placeholders["walk_left"])
-    anim_controller.add_animation(PetState.WALKING_RIGHT, placeholders["walk_right"])
-    anim_controller.add_animation(PetState.FLEEING, placeholders["walk_right"])
+    # --- UPDATED SIZING MATH ---
+    frame_width = 80   # 640 total width / 8 frames = 80
+    frame_height = 64  # Total height of the image
     
-    # New states mapped to existing placeholders so the app doesn't crash
-    anim_controller.add_animation(PetState.WALK_UP, placeholders["idle"])
-    anim_controller.add_animation(PetState.WALK_DOWN, placeholders["idle"])
-    anim_controller.add_animation(PetState.DIAG_UP_RIGHT, placeholders["walk_right"])
-    anim_controller.add_animation(PetState.DIAG_DOWN_LEFT, placeholders["walk_left"])
+    # Since 80x64 is already decent size, let's just scale it by 1.5 or 2 
+    # instead of 3 so it's a normal sized pet. (Change to 1 if it's still too big!)
+    scale_factor = 2   
+    new_size = QSize(int(frame_width * scale_factor), int(frame_height * scale_factor))
+
+    def load_and_scale(filename: str, flip_horizontal: bool = False) -> list:
+        """Helper to load a specific file, scale it, and optionally mirror it."""
+        path = f"assets/sprites/{filename}"
+        
+        # This will now correctly slice the image into 8 blocks of 80x64
+        frames = load_sprite_sheet(path, frame_width, frame_height)
+        
+        if not frames:
+            print(f"Warning: Could not load {path}. Falling back to empty frames.")
+            return []
+        
+        # Scale up using FastTransformation to keep pixel art sharp
+        scaled = [f.scaled(new_size) for f in frames]
+        
+        # Mirror the image for left-facing movement
+        if flip_horizontal:
+            transform = QTransform().scale(-1, 1)
+            scaled = [f.transformed(transform) for f in scaled]
+            
+        return scaled
+
+    # 1. Load the files
+    # Note: Assuming the original drawings face RIGHT. If your cat walks backwards, swap the True/False!
+    idle_frames = load_and_scale("IDLE.png")
+    walk_right_frames = load_and_scale("WALK.png", flip_horizontal=True)
+    walk_left_frames = load_and_scale("WALK.png", flip_horizontal=False)
+    run_right_frames = load_and_scale("RUN.png", flip_horizontal=True)
+    run_left_frames = load_and_scale("RUN.png", flip_horizontal=False)
+
+    # 2. Register the base animations (Adjust FPS to make the walk cycle look natural)
+    anim_controller.add_animation(PetState.IDLE, Animation(frames=idle_frames, fps=6))
+    anim_controller.add_animation(PetState.WALKING_RIGHT, Animation(frames=walk_right_frames, fps=10))
+    anim_controller.add_animation(PetState.WALKING_LEFT, Animation(frames=walk_left_frames, fps=10))
+    
+    # 3. Register the RUN/FLEEING animations
+    anim_controller.add_animation(PetState.FLEEING_RIGHT, Animation(frames=run_right_frames, fps=15))
+    anim_controller.add_animation(PetState.FLEEING_LEFT, Animation(frames=run_left_frames, fps=15))
+    
+    # 4. Map the vertical/diagonal logic to existing visuals so it doesn't crash
+    anim_controller.add_animation(PetState.WALK_UP, Animation(frames=walk_right_frames, fps=10))
+    anim_controller.add_animation(PetState.WALK_DOWN, Animation(frames=walk_left_frames, fps=10))
+    anim_controller.add_animation(PetState.DIAG_UP_RIGHT, Animation(frames=walk_right_frames, fps=10))
+    anim_controller.add_animation(PetState.DIAG_DOWN_LEFT, Animation(frames=walk_left_frames, fps=10))
     
     return anim_controller
 

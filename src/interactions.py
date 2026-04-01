@@ -91,16 +91,12 @@ class InteractionHandler(QObject):
         return False
 
     def _shoo_fox(self) -> None:
-        """Make the fox run away."""
-        # Check if FLEEING state exists, otherwise fallback to walking fast
-        if hasattr(PetState, "FLEEING"):
-            self.pet.enter_state(PetState.FLEEING)
+        """Make the cat run away from the mouse."""
+        # If the cat is on the right side of the screen, run left. Otherwise, run right.
+        if self.pet.x > (self.pet.max_x / 2.0):
+            self.pet.enter_state(PetState.FLEEING_LEFT)
         else:
-            # Run away from the center of the screen
-            if self.pet.x > (self.pet.max_x / 2.0):
-                self.pet.enter_state(PetState.WALKING_LEFT)
-            else:
-                self.pet.enter_state(PetState.WALKING_RIGHT)
+            self.pet.enter_state(PetState.FLEEING_RIGHT)
 
     def _show_context_menu(self, global_pos: QPoint) -> None:
         """Spawn a right-click menu."""

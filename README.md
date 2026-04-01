@@ -48,6 +48,9 @@ kitsune/
 └── tests/
 ```
 
+## SPRITE
+https://xzany.itch.io/cat-2d-pixel-art
+
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
