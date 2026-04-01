@@ -18,19 +18,38 @@ minimal, and fox-themed.
 
 ## Tech stack
 
-- **Python 3.10+**
+- **Python 3.11** (developed on Debian/KDE Plasma)
 - **PyQt6** — transparent frameless always-on-top window, sprite rendering, timers, mouse events
 - **PyGetWindow** — detect open OS windows (position, size) so the fox can interact with them
 - **Sprite sheets** in `assets/sprites/` — pixel art or drawn frames for each animation state
+- **pytest** — test suite (run headless with `QT_QPA_PLATFORM=offscreen`)
+
+## How to run
+
+```bash
+# Activate the venv first — always!
+source venv/bin/activate
+
+# Run the app
+python src/main.py
+# Quit with Ctrl+Q (anywhere) or Ctrl+C (in the terminal)
+
+# Run tests (headless, no display needed)
+QT_QPA_PLATFORM=offscreen PYTHONPATH=src pytest tests/ -v
+```
 
 ## Architecture
 
 ```
 src/
 ├── main.py           Entry point. Creates QApplication, Overlay, Pet, starts event loop.
+│                     Also sets up: system tray icon (Quit menu), Ctrl+Q shortcut,
+│                     Ctrl+C signal handling, and a placeholder sprite.
 ├── overlay.py        The transparent Qt window the fox lives on.
-│                     Key flags: FramelessWindowHint, WindowStaysOnTopHint, Tool,
-│                     WA_TranslucentBackground. Paints the current sprite frame.
+│                     Key flags: FramelessWindowHint, WindowStaysOnTopHint,
+│                     BypassWindowManagerHint, Tool, WA_TranslucentBackground.
+│                     Paints the current sprite frame. Has a tick timer (~60 FPS)
+│                     for repaints and a raise timer (500 ms) to stay on top on KDE.
 ├── pet.py            Fox state machine. States: IDLE, WALKING, SLEEPING, HIDING,
 │                     PEEKING, FLEEING. Each state has a duration and weighted
 │                     transitions to next states. Pure behavior logic, no Qt code.
@@ -40,6 +59,10 @@ src/
 │                     (title, x, y, width, height). Polled periodically by the pet.
 ├── interactions.py   Maps mouse events from Overlay to Pet state changes.
 │                     Left click = shoo, drag = pick up, right click = context menu.
+
+tests/
+├── test_overlay.py   22 tests covering: window flags, geometry, sprite positioning,
+│                     tick timer, raise timer, placeholder sprite, tray icon, signal handling.
 ```
 
 ## Implementation order
@@ -54,16 +77,29 @@ src/
 
 <!-- UPDATE THIS as you make progress -->
 - [x] Project scaffolded with empty modules + docstrings
-- [ ] overlay.py implemented
+- [x] overlay.py implemented — frameless transparent always-on-top window
+- [x] main.py wired up — launches overlay with placeholder sprite (white circle)
+- [x] Shutdown works — Ctrl+Q shortcut, Ctrl+C in terminal, tray icon quit menu
+- [x] Overlay stays on top — BypassWindowManagerHint + periodic raise_() for KDE
+- [x] Test suite — 22 tests passing (flags, geometry, sprites, timers, tray, signals)
 - [ ] animation.py implemented
 - [ ] pet.py implemented
 - [ ] window_manager.py implemented
 - [ ] interactions.py implemented
-- [ ] Placeholder sprites created
+- [ ] Real sprites created
 - [ ] Fox walks across screen
 - [ ] Fox hides behind windows
 - [ ] Click to shoo works
 - [ ] Drag to move works
+
+## Known quirks
+
+- **KDE tray warning:** `failed to register "org.kde.StatusNotifierItem"` is harmless.
+  The tray icon may or may not show depending on KDE version. Ctrl+Q is the reliable
+  quit method.
+- **BypassWindowManagerHint:** Needed on KDE/Plasma because WindowStaysOnTopHint alone
+  doesn't keep the overlay on top. Trade-off: the WM doesn't manage the window at all,
+  so we handle everything ourselves (positioning, staying on-screen, etc).
 
 ## Style and preferences
 
@@ -84,16 +120,16 @@ From the project root, run:
 
 ```bash
 # Collect all Python files + this context into clipboard (Linux/xclip)
-{ echo "=== AI_CONTEXT.md ==="; cat AI_CONTEXT.md; for f in src/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; } | xclip -selection clipboard
+{ echo "=== AI_CONTEXT.md ==="; cat AI_CONTEXT.md; for f in src/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; for f in tests/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; } | xclip -selection clipboard
 
 # macOS variant
-{ echo "=== AI_CONTEXT.md ==="; cat AI_CONTEXT.md; for f in src/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; } | pbcopy
+{ echo "=== AI_CONTEXT.md ==="; cat AI_CONTEXT.md; for f in src/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; for f in tests/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; } | pbcopy
 
 # Windows (Git Bash / WSL)
-{ echo "=== AI_CONTEXT.md ==="; cat AI_CONTEXT.md; for f in src/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; } | clip.exe
+{ echo "=== AI_CONTEXT.md ==="; cat AI_CONTEXT.md; for f in src/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; for f in tests/*.py; do echo ""; echo "=== $f ==="; cat "$f"; done; } | clip.exe
 
 # Windows (PowerShell)
-(Get-Content AI_CONTEXT.md; Get-ChildItem src/*.py | ForEach-Object { "`n=== $($_.Name) ==="; Get-Content $_ }) | Set-Clipboard
+(Get-Content AI_CONTEXT.md; Get-ChildItem src/*.py | ForEach-Object { "`n=== $($_.Name) ==="; Get-Content $_ }; Get-ChildItem tests/*.py | ForEach-Object { "`n=== $($_.Name) ==="; Get-Content $_ }) | Set-Clipboard
 ```
 
 Then just paste into a new chat. The AI will have full context immediately.
