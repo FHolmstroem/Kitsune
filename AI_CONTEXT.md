@@ -10,7 +10,7 @@ It hides behind OS windows, peeks out, walks around, sleeps, and can be
 clicked to shoo it away or dragged to move it. Think Shimeji but modern,
 minimal, and fox-themed.
 
-## Core principles
+## Core principles #
 
 - **Use libraries, don't reinvent.** If a library does it, use it.
 - **Clean structure.** No monolithic files. Each module has one job.
