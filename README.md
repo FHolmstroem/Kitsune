@@ -1,79 +1,100 @@
-# 🦊 Kitsune
+# Kitsune 🦊
 
-A lightweight desktop pet — a white fox that roams your screen, hides behind windows, and reacts when you interact with it.
+A desktop pet fox that roams your screen — hides behind windows, walks around, sleeps, and reacts when you click or drag it. Think Shimeji, but modern and fox-themed.
 
-Built with Python and PyQt6.
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+<!-- TODO: Add a gif/screenshot of the fox in action here -->
+<!-- ![Kitsune demo](assets/demo.gif) -->
+
+## Download
+
+Grab the latest Windows installer from the [Releases page](https://github.com/FHolmstroem/Kitsune/releases).
+
+Run the setup wizard and Kitsune will install like any other app — no Python required.
 
 ## Features
 
-- 🦊 Animated white fox that walks across your screen
-- 🪟 Aware of open windows — hides behind them, peeks out
-- 🖱️ Click to shoo, drag to move
-- 🎨 Sprite-based animations (walk, idle, sleep, hide, peek)
-- 💻 Cross-platform (Windows, macOS, Linux)
+- Transparent overlay — the fox walks on top of your desktop
+- State machine AI — idles, walks, runs, and flees when clicked
+- Click to shoo, drag to move
+- System tray icon with quit option
+- Keyboard shortcut: `Ctrl+Q` to quit
 
-## Installation 1
+## Run from source
 
-You don't need Python or a terminal to run Kitsune! 
-
-**For Windows Users:**
-1. Go to the [Releases](https://github.com/FHolmstroem/Kitsune/releases) page.
-2. Download the latest `Kitsune_Setup_v1.0.exe`.
-3. Double-click the installer. It will guide you through the setup and create a Desktop shortcut for you.
-4. Launch Kitsune and enjoy your new desktop pet!
-
-*(Note: Because I am an indie developer without a commercial code-signing certificate, Windows Defender might show a blue "Windows protected your PC" warning. Just click **More info** -> **Run anyway**.)*
-
-**For Developers:**
-See the *How to run* section below to launch the app from source using Python and a virtual environment.
-
-## Installation 2
+Requires Python 3.11+ on Linux or Windows.
 
 ```bash
+# Clone and enter the repo
 git clone git@github.com:FHolmstroem/Kitsune.git
 cd Kitsune
-pip install -r requirements.txt
+
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate      # Linux/macOS
+venv\Scripts\activate         # Windows
+
+# Install dependencies
+pip install PyQt6 PyGetWindow
+
+# Run
+python src/main.py
 ```
 
-## Usage
+Quit with `Ctrl+Q` (anywhere) or `Ctrl+C` (in the terminal).
+
+## Build the Windows installer yourself
 
 ```bash
-python -m src.main
+# 1. Freeze with PyInstaller
+pyinstaller --noconsole --name Kitsune --paths src \
+    --add-data "assets/sprites;assets/sprites" src/main.py
 
-.\venv\Scripts\Activate.ps1
-$env:QT_QPA_PLATFORM="offscreen"; $env:PYTHONPATH="src"; pytest tests/ -v; Remove-Item env:QT_QPA_PLATFORM
-
+# 2. Compile the installer with Inno Setup
+#    Open installer_script.iss in Inno Setup and hit Compile.
+#    Output lands in build_installer/Kitsune_Setup_v1.0.exe
 ```
 
-## Project Structure
+## Run tests
+
+```bash
+# Headless (no display needed)
+QT_QPA_PLATFORM=offscreen PYTHONPATH=src pytest tests/ -v
+```
+
+## Project structure
 
 ```
-kitsune/
-├── assets/sprites/       Fox sprite sheets
-├── src/
-│   ├── main.py           Entry point
-│   ├── pet.py            Fox behavior and state machine
-│   ├── animation.py      Sprite loading and frame cycling
-│   ├── overlay.py        Transparent always-on-top window
-│   ├── window_manager.py OS window detection
-│   └── interactions.py   Click, drag, and shoo handling
-└── tests/
+src/
+├── main.py             Entry point, wires everything together
+├── overlay.py          Transparent always-on-top Qt window
+├── pet.py              Fox state machine (idle, walk, flee, etc.)
+├── animation.py        Sprite sheet loading and frame cycling
+├── window_manager.py   OS window detection via PyGetWindow
+└── interactions.py     Mouse event handling (click, drag, shoo)
+
+assets/sprites/         Sprite sheets (walk, run, idle)
+tests/                  pytest suite (runs headless)
 ```
+
+## Roadmap
+
+- [x] Transparent overlay with sprite rendering
+- [x] State machine with walking, idling, and fleeing
+- [x] Click to shoo, drag to move
+- [x] Real sprite art integrated
+- [x] Windows installer via PyInstaller + Inno Setup
+- [ ] Fox hides behind OS windows
+- [ ] Custom app icon (.ico)
+- [ ] Sleep animation after long idle
+- [ ] More personality (random behaviors, reactions)
 
 ## Credits
 
 - **Cat sprites** by [xzany](https://xzany.itch.io/cat-2d-pixel-art) — 2D Pixel Art Cat asset pack. Used under the author's license (see `assets/sprites/LICENSE.txt`).
-
-## Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
-## Support
-
-If you enjoy Kitsune, consider buying me a coffee ☕
 
 ## License
 

@@ -1,2 +1,4 @@
-PyQt6>=6.6.0
-PyGetWindow>=0.0.9
+PyQt6
+PyGetWindow
+pytest
+pyinstaller
