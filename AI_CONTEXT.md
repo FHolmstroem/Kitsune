@@ -24,6 +24,18 @@ minimal, and fox-themed.
 - **Sprite sheets** in `assets/sprites/` — pixel art or drawn frames for each animation state
 - **pytest** — test suite (run headless with `QT_QPA_PLATFORM=offscreen`)
 
+## Packaging and Distribution
+
+The app can be compiled into a standalone Windows executable and a Setup Wizard.
+
+- **PyInstaller:** Used to freeze the app into a single `.exe`.
+  - **Asset Routing:** `main.py` contains a `resource_path()` helper function. This ensures that when the app is packaged, it looks for sprites in the temporary `sys._MEIPASS` folder rather than the local directory.
+  - **Build Command:** `pyinstaller --noconsole --name Kitsune --paths src --add-data "assets/sprites;assets/sprites" src/main.py`
+- **Inno Setup:** Used to wrap the PyInstaller output into a Windows installer.
+  - The configuration script is saved as `installer_script.iss` in the root directory.
+  - The compiled setup file (`Kitsune_Setup_v1.0.exe`) is output to the `build_installer/` directory.
+
+
 ## How to run
 
 ```bash
@@ -94,6 +106,14 @@ tests/
 - [ ] Fox hides behind windows
 - [x] Click to shoo works
 - [x] Drag to move works
+- [x] Project scaffolded and transparent Qt overlay built
+- [x] Pet logic state machine wired up (idle, walk, run)
+- [x] Interaction handler (drag to move, click to shoo)
+- [x] Real sprites integrated and scaled
+- [x] PyInstaller standalone `.exe` build working locally
+- [x] Inno Setup Windows installer created and tested
+- [ ] Add custom `.ico` icon to the app and installer
+- [ ] Implement Fox hiding behind OS windows (window_manager.py)
 
 ## Known quirks
 

@@ -15,7 +15,22 @@ Built with Python and PyQt6.
 - 🎨 Sprite-based animations (walk, idle, sleep, hide, peek)
 - 💻 Cross-platform (Windows, macOS, Linux)
 
-## Installation
+## Installation 1
+
+You don't need Python or a terminal to run Kitsune! 
+
+**For Windows Users:**
+1. Go to the [Releases](https://github.com/FHolmstroem/Kitsune/releases) page.
+2. Download the latest `Kitsune_Setup_v1.0.exe`.
+3. Double-click the installer. It will guide you through the setup and create a Desktop shortcut for you.
+4. Launch Kitsune and enjoy your new desktop pet!
+
+*(Note: Because I am an indie developer without a commercial code-signing certificate, Windows Defender might show a blue "Windows protected your PC" warning. Just click **More info** -> **Run anyway**.)*
+
+**For Developers:**
+See the *How to run* section below to launch the app from source using Python and a virtual environment.
+
+## Installation 2
 
 ```bash
 git clone git@github.com:FHolmstroem/Kitsune.git
