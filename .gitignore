@@ -62,3 +62,6 @@ build_installer/
 
 # Alternatively, if you only put .exe files in build_installer, you can just do:
 # build_installer/*.exe
+
+## AI CONTEXT
+AI_CONTEXT.md
