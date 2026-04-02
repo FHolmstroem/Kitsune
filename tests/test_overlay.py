@@ -52,10 +52,10 @@ class TestOverlayWindowFlags:
         )
 
     def test_not_transparent_for_mouse(self, overlay):
-    """Mouse events must reach the overlay for drag/shoo interactions."""
-    assert not overlay.testAttribute(
-        Qt.WidgetAttribute.WA_TransparentForMouseEvents
-    )
+        """Mouse events must reach the overlay for drag/shoo interactions."""
+        assert not overlay.testAttribute(
+            Qt.WidgetAttribute.WA_TransparentForMouseEvents
+        )
     
     def test_bypass_window_manager(self, overlay):
         if sys.platform == "win32":
