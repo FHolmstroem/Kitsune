@@ -7,6 +7,7 @@ spawns the fox, and starts the main event loop.
 
 import signal
 import sys
+import os
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap, QColor, QPainter, QIcon, QAction, QShortcut, QKeySequence
@@ -21,6 +22,16 @@ from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QTransform
 from pet import Pet, PetState
 
+def resource_path(relative_path: str) -> str:
+    """Get absolute path to resource, works for dev and for PyInstaller."""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        # If not running as .exe, fall back to normal path
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 def _make_tray_icon() -> QIcon:
     """Tiny 16x16 icon for the system tray."""
@@ -70,7 +81,8 @@ def _setup_animations() -> AnimationController:
 
     def load_and_scale(filename: str, flip_horizontal: bool = False) -> list:
         """Helper to load a specific file, scale it, and optionally mirror it."""
-        path = f"assets/sprites/{filename}"
+        # Wrap the string in our new resource_path function!
+        path = resource_path(f"assets/sprites/{filename}") 
         
         # This will now correctly slice the image into 8 blocks of 80x64
         frames = load_sprite_sheet(path, frame_width, frame_height)

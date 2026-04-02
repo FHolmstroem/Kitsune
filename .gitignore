@@ -47,3 +47,18 @@ __pycache__/
 venv/
 .DS_Store
 Thumbs.db
+
+# --- PyInstaller ---
+# Ignore the build folders and all spec files (case-insensitive)
+build/
+dist/
+*.spec
+
+# --- Inno Setup ---
+# Ignore the generated setup executables, but KEEP the .iss script!
+build_installer/
+!build_installer/*.iss  
+# (The line above says: ignore the folder, but specifically DO NOT ignore .iss files inside it)
+
+# Alternatively, if you only put .exe files in build_installer, you can just do:
+# build_installer/*.exe
