@@ -26,3 +26,24 @@ Thumbs.db
 
 # Distribution
 *.spec
+
+# --- PyInstaller ---
+# PyInstaller creates these folders to do its work and store the .exe
+build/
+dist/
+# PyInstaller generates a .spec file. If you heavily customize it, you might 
+# want to commit it later, but default ones should be ignored.
+*.spec
+
+# --- Inno Setup ---
+# By default, Inno Setup spits the final installer into an 'Output' folder
+Output/
+*.tmp
+
+# --- Python & OS specific (just in case you missed them) ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+venv/
+.DS_Store
+Thumbs.db
