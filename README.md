@@ -6,8 +6,8 @@ A desktop pet fox that roams your screen — hides behind windows, walks around,
 ![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-<!-- TODO: Add a gif/screenshot of the fox in action here -->
-<!-- ![Kitsune demo](assets/demo.gif) -->
+
+![Kitsune demo](assets/demo.gif)
 
 ## Download
 
