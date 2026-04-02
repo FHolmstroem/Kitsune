@@ -1,5 +1,11 @@
 """Tests for window_manager.py."""
 
+import sys
+import pytest
+
+if sys.platform != "win32":
+    pytest.skip("pygetwindow only supports Windows", allow_module_level=True)
+
 from unittest.mock import patch, MagicMock
 from window_manager import WindowRect, get_windows
 
