@@ -63,8 +63,9 @@ kitsune/
 └── tests/
 ```
 
-## SPRITE
-https://xzany.itch.io/cat-2d-pixel-art
+## Credits
+
+- **Cat sprites** by [xzany](https://xzany.itch.io/cat-2d-pixel-art) — 2D Pixel Art Cat asset pack. Used under the author's license (see `assets/sprites/LICENSE.txt`).
 
 ## Contributing
 
