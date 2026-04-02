@@ -37,6 +37,8 @@ class PetState(str, Enum):
     DIAG_UP_RIGHT = "diag_up_right"
     DIAG_DOWN_LEFT = "diag_down_left"
 
+    # TODO: add sleep state
+
 
 @dataclass
 class StateConfig:
