@@ -20,6 +20,7 @@ Run the setup wizard and Kitsune will install like any other app — no Python r
 - Transparent overlay — the fox walks on top of your desktop
 - State machine AI — idles, walks, runs, and flees when clicked
 - Click to shoo, drag to move
+- Right click to start mini game to chase cursor
 - System tray icon with quit option
 - Keyboard shortcut: `Ctrl+Q` to quit
 
