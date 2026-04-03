@@ -10,7 +10,7 @@ import sys
 import os
 
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QPixmap, QColor, QPainter, QIcon, QAction, QShortcut, QKeySequence
+from PyQt6.QtGui import QPixmap, QColor, QPainter, QIcon, QAction, QShortcut, QKeySequence, QTransform, QCursor
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 
 from overlay import Overlay
@@ -149,6 +149,12 @@ def _setup_game_loop(overlay: Overlay, fox_logic: Pet, anim_controller: Animatio
     def game_loop_tick():
         delta = overlay.TICK_MS
 
+        if fox_logic.is_laser_active:
+            cursor_pos = QCursor.pos()
+            # Offset by roughly half your scaled sprite size so it centers on the mouse
+            # 80x64 * scale_factor(2) = 160x128. Half of that is 80x64
+            fox_logic.update_laser_target(cursor_pos.x() - 80, cursor_pos.y() - 64)
+
         fox_logic.tick(delta)
         anim_controller.play(str(fox_logic.state.value))
 
@@ -157,8 +163,6 @@ def _setup_game_loop(overlay: Overlay, fox_logic: Pet, anim_controller: Animatio
             overlay.set_sprite(frame)
 
         overlay.set_position(int(fox_logic.x), int(fox_logic.y))
-
-        # Safer way to force the Qt repaint
         overlay.update()
         
         print(f"State: {fox_logic.state.value:10} | Pos: ({int(fox_logic.x):4}, {int(fox_logic.y):4})", end="\r")

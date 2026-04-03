@@ -62,3 +62,36 @@ def test_boundary_collision_right():
     
     assert pet.x == 1000.0
     assert pet.state == PetState.WALKING_LEFT
+
+
+def test_laser_mode_idle():
+    """Fox should idle if the cursor is very close."""
+    pet = Pet(start_x=100.0, start_y=100.0)
+    pet.is_laser_active = True
+    pet.update_laser_target(110.0, 110.0)  # Distance ~14, less than 30 threshold
+    pet.tick(16.0)
+    
+    assert pet.state == PetState.IDLE
+    assert pet.speed_x == 0.0
+    assert pet.speed_y == 0.0
+
+def test_laser_mode_walk():
+    """Fox should walk towards the cursor if it's moderately far away."""
+    pet = Pet(start_x=100.0, start_y=100.0)
+    pet.is_laser_active = True
+    pet.update_laser_target(200.0, 100.0)  # Distance 100 (walk threshold is < 200)
+    pet.tick(16.0)
+    
+    assert pet.state == PetState.WALKING_RIGHT
+    assert pet.speed_x > 0.0
+    assert pet.speed_y == 0.0  # Directly to the right
+
+def test_laser_mode_run():
+    """Fox should run (flee state visually) towards the cursor if it's far away."""
+    pet = Pet(start_x=100.0, start_y=100.0)
+    pet.is_laser_active = True
+    pet.update_laser_target(500.0, 100.0)  # Distance 400 (run threshold is >= 200)
+    pet.tick(16.0)
+    
+    assert pet.state == PetState.FLEEING_RIGHT
+    assert pet.speed_x == 180.0  # Flee base speed

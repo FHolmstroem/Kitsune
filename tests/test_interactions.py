@@ -102,3 +102,17 @@ def test_click_without_move_shoos_fox(interaction_setup):
     assert not handler.is_dragging
     # Should no longer be IDLE because it got shooed
     assert pet.state != PetState.IDLE
+
+def test_toggle_laser(interaction_setup):
+    """Verify right-click logic toggles laser state."""
+    overlay, pet, handler = interaction_setup
+    
+    assert not pet.is_laser_active
+    
+    handler._toggle_laser()
+    assert pet.is_laser_active
+    
+    # Toggle it off again
+    handler._toggle_laser()
+    assert not pet.is_laser_active
+    assert pet.state == PetState.IDLE

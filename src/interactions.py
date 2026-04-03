@@ -1,12 +1,5 @@
 """
 Click, drag, and shoo handling.
-
-Processes mouse events from the overlay and translates them into
-actions for the Pet:
-
-    - Left click on fox  -> shoo (fox runs away)
-    - Click and drag     -> pick up and move the fox
-    - Right click on fox -> context menu (quit, settings, etc.)
 """
 
 from PyQt6.QtCore import QObject, QEvent, Qt, QPoint
@@ -29,11 +22,9 @@ class InteractionHandler(QObject):
         self.drag_offset = QPoint()
         self.has_moved = False
 
-        # Hook into the overlay's event loop
         self.overlay.installEventFilter(self)
 
     def eventFilter(self, obj: QObject, event: QEvent) -> bool:
-        """Filter events looking for mouse interactions."""
         if obj is not self.overlay:
             return super().eventFilter(obj, event)
 
@@ -47,18 +38,14 @@ class InteractionHandler(QObject):
         return super().eventFilter(obj, event)
 
     def _handle_mouse_press(self, event: QMouseEvent) -> bool:
-        # Ignore clicks that aren't on the fox
         click_pos = event.position().toPoint()
         if not self.overlay.sprite_rect.contains(click_pos):
-            return False  # Let the event pass through to the OS (if supported)
+            return False
 
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_dragging = True
             self.has_moved = False
-            # Calculate where on the sprite we clicked so dragging is smooth
             self.drag_offset = click_pos - self.overlay.sprite_rect.topLeft()
-            
-            # Optional: enter a suspended "DRAGGED" state here if added to pet.py
             return True
 
         elif event.button() == Qt.MouseButton.RightButton:
@@ -74,7 +61,6 @@ class InteractionHandler(QObject):
         self.has_moved = True
         new_pos = event.position().toPoint() - self.drag_offset
         
-        # Instantly teleport the logic and visually update
         self.pet.x = float(new_pos.x())
         self.pet.y = float(new_pos.y())
         self.overlay.set_position(new_pos.x(), new_pos.y())
@@ -91,22 +77,30 @@ class InteractionHandler(QObject):
         return False
 
     def _shoo_fox(self) -> None:
-        """Make the cat run away from the mouse."""
-        # If the cat is on the right side of the screen, run left. Otherwise, run right.
         if self.pet.x > (self.pet.max_x / 2.0):
             self.pet.enter_state(PetState.FLEEING_LEFT)
         else:
             self.pet.enter_state(PetState.FLEEING_RIGHT)
 
     def _show_context_menu(self, global_pos: QPoint) -> None:
-        """Spawn a right-click menu."""
         menu = QMenu()
-        quit_action = QAction("Quit Kitsune", menu)
         
-        # Access the global app instance to quit
+        laser_text = "Turn Laser Off" if self.pet.is_laser_active else "Turn Laser On"
+        laser_action = QAction(laser_text, menu)
+        laser_action.triggered.connect(self._toggle_laser)
+        menu.addAction(laser_action)
+        
+        menu.addSeparator()
+
+        quit_action = QAction("Quit Kitsune", menu)
         app = QApplication.instance()
         if app:
             quit_action.triggered.connect(app.quit)
             
         menu.addAction(quit_action)
         menu.exec(global_pos)
+
+    def _toggle_laser(self) -> None:
+        self.pet.is_laser_active = not self.pet.is_laser_active
+        if not self.pet.is_laser_active:
+            self.pet.enter_state(PetState.IDLE)
