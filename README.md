@@ -74,6 +74,7 @@ wsl -d Debian
 source venv/bin/activate
 mutmut run
 mutmut results
+mutmut show <mutant>
 ```
 
 ## Project structure
