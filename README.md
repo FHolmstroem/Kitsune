@@ -1,6 +1,6 @@
 # Kitsune 🦊
 
-A desktop pet fox that roams your screen — hides behind windows, walks around, sleeps, and reacts when you click or drag it. Think Shimeji, but modern and fox-themed.
+Kitsune is a desktop pet app – a white fox that roams the user's screen. It's also a learning project for CI/CD, testing, mutation testing, and modern development workflows. The fox hides behind OS windows, peeks out, walks around, sleeps, and can be clicked to shoo it away or dragged to move it.
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![PyQt6](https://img.shields.io/badge/GUI-PyQt6-green)
@@ -66,6 +66,16 @@ pyinstaller --noconsole --name Kitsune --paths src \
 QT_QPA_PLATFORM=offscreen PYTHONPATH=src pytest tests/ -v
 ```
 
+## Mutation Testing
+We use mutmut (v3) for mutation testing, run inside WSL Debian. Config lives in pyproject.toml.
+
+```bash
+wsl -d Debian
+source venv/bin/activate
+mutmut run
+mutmut results
+```
+
 ## Project structure
 
 ```
@@ -92,6 +102,9 @@ tests/                  pytest suite (runs headless)
 - [ ] Custom app icon (.ico)
 - [ ] Sleep animation after long idle
 - [ ] More personality (random behaviors, reactions)
+
+## AI Assistance
+This project is built with help from Google Gemini and Anthropic Claude.
 
 ## Credits
 
