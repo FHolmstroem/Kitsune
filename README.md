@@ -77,6 +77,21 @@ mutmut results
 mutmut show <mutant>
 ```
 
+To get all the results in mutmut_results.txt
+
+```bash
+total=$(mutmut results 2>&1 | grep -c "survived")
+i=0
+mutmut results 2>&1 | grep "survived" | sed 's/: survived//' | sed 's/^[[:space:]]*//' | while IFS= read -r m; do
+  i=$((i + 1))
+  echo -ne "\r$i / $total" >&2
+  mutmut show "$m"
+  echo "---"
+done > mutmut_results.txt
+echo "" >&2
+echo "Done! $total mutants written to mutmut_results.txt" >&2
+```
+
 ## Project structure
 
 ```
