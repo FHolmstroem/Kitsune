@@ -95,3 +95,19 @@ def test_laser_mode_run():
     
     assert pet.state == PetState.FLEEING_RIGHT
     assert pet.speed_x == 180.0  # Flee base speed
+
+def test_pet_default_boundaries():
+    """Default boundaries should be sensible defaults."""
+    pet = Pet(start_x=100.0, start_y=100.0)
+    assert pet.min_x == 0.0
+    assert pet.min_y == 0.0
+
+def test_laser_mode_diagonal():
+    """Laser should account for both x and y distance."""
+    pet = Pet(start_x=100.0, start_y=100.0)
+    pet.is_laser_active = True
+    pet.update_laser_target(120.0, 125.0)  # hypot(20,25)≈32 → walk. hypot(20)=20 → idle
+    pet.tick(16.0)
+    
+    assert pet.state != PetState.IDLE
+    assert pet.speed_y > 0.0
